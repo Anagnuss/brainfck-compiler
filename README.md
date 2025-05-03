@@ -75,4 +75,3 @@ Options:
 - [brainf*ck to C live translator](https://brainfuck.org/dbf2c.b)
 - [computation the transcendental number e](https://brainfuck.org/e.b)
 - [almost random](https://brainfuck.org/random.b)
-- 
