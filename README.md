@@ -30,6 +30,7 @@ Usage: bf [COMMAND]
 Commands:
   compile  Compiles a source file
   repl     Takes user input and compiles that as source
+  about    Prints about this software and of its licence
   help     Print this message or the help of the given subcommand(s)
 
 Options:
