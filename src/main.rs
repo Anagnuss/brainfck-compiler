@@ -393,6 +393,7 @@ fn run() -> Result<(), ()> {
 
     if run_clang {
         print!("invoking clang...");
+        std::io::stdout().flush();
         let o = std::process::Command::new("clang").arg(&llvm_ir_filename).arg("-o").arg(&output_file).args(clang_additional_arguments).output().unwrap();
         print!("\r");
         if !o.status.success() {
