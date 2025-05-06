@@ -263,7 +263,7 @@ fn process_args() -> Result<Args, bool> {
         }
         Some(("repl", cmd)) => {
 
-            let llvm_emit = match cmd.get_one::<&PathBuf>("LL") {
+            let llvm_emit = match cmd.get_one::<PathBuf>("LL") {
                 None => { None }
                 Some(t) => Some((*t).clone()),
             };
@@ -276,7 +276,8 @@ fn process_args() -> Result<Args, bool> {
 
             let override_new_line_to_null = cmd.get_flag("ONL");
 
-
+            println!("Welcome to REPL mode used to compile brainf*ck from user input and not from a file.");
+            println!("Write 'exit' on empty line to proceed with compilation.");
             let mut ot = String::new();
             loop {
                 let mut s = String::new();
@@ -312,21 +313,6 @@ fn main() {
 
 fn run() -> Result<(), ()> {
 
-    let has_clang = if cfg!(target_os = "windows") {
-        std::process::Command::new("cmd")
-            .args(["/C", "clang --version"])
-            .output().map(|s| s.status.success()).unwrap_or(false)
-    } else {
-        std::process::Command::new("clang")
-            .arg("--version")
-            .output().map(|s| s.status.success()).unwrap_or(false)
-    };
-
-    if !has_clang {
-        eprintln!("requires 'clang'");
-        return Err(());
-    }
-
     // (Token, count)
     let mut tokens: Vec<(Token, usize, usize)> = vec![];
 
@@ -349,6 +335,21 @@ fn run() -> Result<(), ()> {
             (output, ll, emit, override_new_line_to_null, cells_count, vec!["-O3"], run_clang)
         }
     };
+
+    let has_clang = if cfg!(target_os = "windows") {
+        std::process::Command::new("cmd")
+            .args(["/C", "clang --version"])
+            .output().map(|s| s.status.success()).unwrap_or(false)
+    } else {
+        std::process::Command::new("clang")
+            .arg("--version")
+            .output().map(|s| s.status.success()).unwrap_or(false)
+    };
+
+    if !has_clang && run_clang {
+        eprintln!("requires 'clang'");
+        return Err(());
+    }
 
 
     let mut ch_iter = input.chars().enumerate().peekable();
@@ -387,14 +388,13 @@ fn run() -> Result<(), ()> {
         write!(f, "@{c_name} = private constant [{} x i8] c\"{}\\00\"\n",c_val.len()+1, c_val.escape_debug());
     }
 
-    if emit_llvm_ir {
-        _ = std::fs::write(&llvm_ir_filename, &f);
-    }
 
     _ = std::fs::write(&llvm_ir_filename, f);
 
     if run_clang {
+        print!("invoking clang...");
         let o = std::process::Command::new("clang").arg(&llvm_ir_filename).arg("-o").arg(&output_file).args(clang_additional_arguments).output().unwrap();
+        print!("\r");
         if !o.status.success() {
             eprintln!("clang failed with:\n{}", String::from_utf8(o.stderr).unwrap());
             return Err(());
